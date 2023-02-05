@@ -11,6 +11,7 @@ import (
 type Repository interface {
 	Create(u *entities.User) (*entities.User, error)
 	Get(id string) (*entities.User, error)
+	GetByLogin(login string) (*entities.User, error)
 	Update(u *entities.User) (*entities.User, error)
 	Delete(id string) error
 }
@@ -41,6 +42,14 @@ func (r *repository) Get(id string) (*entities.User, error) {
 		return nil, err
 	}
 	if err := r.Collection.FindOne(context.Background(), bson.M{"_id": uid}).Decode(&user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *repository) GetByLogin(login string) (*entities.User, error) {
+	var user *entities.User
+	if err := r.Collection.FindOne(context.Background(), bson.M{"login": login}).Decode(&user); err != nil {
 		return nil, err
 	}
 	return user, nil

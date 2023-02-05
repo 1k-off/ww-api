@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 	"ww-api-gateway/api/router"
+	"ww-api-gateway/pkg/auth"
 	"ww-api-gateway/pkg/user"
 )
 
@@ -17,6 +18,8 @@ type Config struct {
 	Port                     string
 	Cancel                   context.CancelFunc
 	UserService              user.Service
+	AuthService              auth.Service
+	AccessTokenPublicKey     string
 }
 
 func Start(c *Config) error {
@@ -26,16 +29,22 @@ func Start(c *Config) error {
 	})
 
 	api := app.Group("/api")
-	router.UserRouter(api, c.UserService)
+	router.UserRouter(api, c.UserService, c.AccessTokenPublicKey)
+	router.AuthRouter(api, c.AuthService, c.AccessTokenPublicKey)
 	defer c.Cancel()
 	return app.Listen(":" + c.Port)
 }
 
-func NewConfig(databaseConnectionString string, port string) (*Config, error) {
+func NewConfig(
+	databaseConnectionString string,
+	port string,
+	accessTokenPrivateKey, accessTokenPublicKey, refreshTokenPrivateKey, refreshTokenPublicKey string,
+	accessTokenExpiresIn, refreshTokenExpiresIn int,
+) (*Config, error) {
 	db, cancel, err := databaseConnection(databaseConnectionString)
 	if err != nil {
-		return nil, err
 		cancel()
+		return nil, err
 	}
 	log.Println("Connected to database")
 
@@ -48,17 +57,21 @@ func NewConfig(databaseConnectionString string, port string) (*Config, error) {
 		},
 	)
 	if err != nil {
-		return nil, err
 		cancel()
+		return nil, err
 	}
 	userRepository := user.NewRepository(userCollection)
 	userService := user.NewService(userRepository)
+
+	authService := auth.NewService(userService, accessTokenPrivateKey, accessTokenPublicKey, refreshTokenPrivateKey, refreshTokenPublicKey, accessTokenExpiresIn, refreshTokenExpiresIn)
 
 	return &Config{
 		DatabaseConnectionString: databaseConnectionString,
 		Port:                     port,
 		UserService:              userService,
 		Cancel:                   cancel,
+		AuthService:              authService,
+		AccessTokenPublicKey:     accessTokenPublicKey,
 	}, nil
 }
 
