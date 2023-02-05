@@ -10,6 +10,7 @@ import (
 	"time"
 	"ww-api-gateway/api/router"
 	"ww-api-gateway/pkg/auth"
+	"ww-api-gateway/pkg/target"
 	"ww-api-gateway/pkg/user"
 )
 
@@ -20,6 +21,7 @@ type Config struct {
 	UserService              user.Service
 	AuthService              auth.Service
 	AccessTokenPublicKey     string
+	TargetService            target.Service
 }
 
 func Start(c *Config) error {
@@ -31,6 +33,7 @@ func Start(c *Config) error {
 	api := app.Group("/api")
 	router.UserRouter(api, c.UserService, c.AccessTokenPublicKey)
 	router.AuthRouter(api, c.AuthService, c.AccessTokenPublicKey)
+	router.TargetRouter(api, c.TargetService, c.AccessTokenPublicKey)
 	defer c.Cancel()
 	return app.Listen(":" + c.Port)
 }
@@ -65,6 +68,21 @@ func NewConfig(
 
 	authService := auth.NewService(userService, accessTokenPrivateKey, accessTokenPublicKey, refreshTokenPrivateKey, refreshTokenPublicKey, accessTokenExpiresIn, refreshTokenExpiresIn)
 
+	targetCollection := db.Collection("targets")
+	_, err = targetCollection.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys:    bson.D{{Key: "url", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+	targetRepository := target.NewRepository(targetCollection)
+	targetService := target.NewService(targetRepository)
+
 	return &Config{
 		DatabaseConnectionString: databaseConnectionString,
 		Port:                     port,
@@ -72,6 +90,7 @@ func NewConfig(
 		Cancel:                   cancel,
 		AuthService:              authService,
 		AccessTokenPublicKey:     accessTokenPublicKey,
+		TargetService:            targetService,
 	}, nil
 }
 
