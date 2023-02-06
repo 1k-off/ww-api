@@ -20,7 +20,7 @@ type repository struct {
 	Collection *mongo.Collection
 }
 
-func NewRepository(c *mongo.Collection) Service {
+func NewRepository(c *mongo.Collection) Repository {
 	return &repository{
 		Collection: c,
 	}

@@ -27,19 +27,3 @@ type TargetNotifications struct {
 	Slack      bool     `bson:"slack" json:"slack"`
 	SlackUsers []string `bson:"slackUsers" json:"slackUsers"`
 }
-
-//type TargetSSLExpiration struct {
-//	URL            string
-//	ExpirationDate string
-//	DaysLeft       int
-//}
-//
-//type TargetDomainExpiration struct {
-//	URL            string
-//	ExpirationDate string
-//	DaysLeft       int
-//}
-
-//type TargetUrl struct {
-//	URL string `json:"url"`
-//}

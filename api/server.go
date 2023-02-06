@@ -10,6 +10,7 @@ import (
 	"time"
 	"ww-api-gateway/api/router"
 	"ww-api-gateway/pkg/auth"
+	"ww-api-gateway/pkg/metrics"
 	"ww-api-gateway/pkg/target"
 	"ww-api-gateway/pkg/user"
 )
@@ -22,6 +23,7 @@ type Config struct {
 	AuthService              auth.Service
 	AccessTokenPublicKey     string
 	TargetService            target.Service
+	MetricsService           metrics.Service
 }
 
 func Start(c *Config) error {
@@ -34,6 +36,8 @@ func Start(c *Config) error {
 	router.UserRouter(api, c.UserService, c.AccessTokenPublicKey)
 	router.AuthRouter(api, c.AuthService, c.AccessTokenPublicKey)
 	router.TargetRouter(api, c.TargetService, c.AccessTokenPublicKey)
+	router.CheckerRouter(api, c.TargetService, c.AccessTokenPublicKey)
+	router.MetricsRouter(api, c.MetricsService, c.AccessTokenPublicKey)
 	defer c.Cancel()
 	return app.Listen(":" + c.Port)
 }
@@ -83,6 +87,12 @@ func NewConfig(
 	targetRepository := target.NewRepository(targetCollection)
 	targetService := target.NewService(targetRepository)
 
+	metricsUptimeCollection := db.Collection("metrics_uptime")
+	metricsSslCollection := db.Collection("metrics_ssl")
+	metricsDomainExpirationCollection := db.Collection("metrics_domain_expiration")
+	metricsRepository := metrics.NewRepository(metricsUptimeCollection, metricsSslCollection, metricsDomainExpirationCollection)
+	metricsService := metrics.NewService(metricsRepository)
+
 	return &Config{
 		DatabaseConnectionString: databaseConnectionString,
 		Port:                     port,
@@ -91,6 +101,7 @@ func NewConfig(
 		AuthService:              authService,
 		AccessTokenPublicKey:     accessTokenPublicKey,
 		TargetService:            targetService,
+		MetricsService:           metricsService,
 	}, nil
 }
 
@@ -106,5 +117,39 @@ func databaseConnection(connectionString string) (*mongo.Database, context.Cance
 		cancel()
 		return nil, nil, err
 	}
+
+	opts := options.CreateCollection().
+		SetTimeSeriesOptions(options.TimeSeries().
+			SetGranularity("seconds").
+			SetMetaField("metadata").
+			SetTimeField("timestamp")).SetExpireAfterSeconds(60 * 60 * 24 * 30)
+	err = client.Database("ww").CreateCollection(context.Background(), "metrics_uptime", opts)
+	if err != nil {
+		cancel()
+		return nil, nil, err
+	}
+
+	opts = options.CreateCollection().
+		SetTimeSeriesOptions(options.TimeSeries().
+			SetGranularity("hours").
+			SetMetaField("metadata").
+			SetTimeField("timestamp")).SetExpireAfterSeconds(60 * 60 * 24 * 30)
+	err = client.Database("ww").CreateCollection(context.Background(), "metrics_ssl", opts)
+	if err != nil {
+		cancel()
+		return nil, nil, err
+	}
+
+	opts = options.CreateCollection().
+		SetTimeSeriesOptions(options.TimeSeries().
+			SetGranularity("hours").
+			SetMetaField("metadata").
+			SetTimeField("timestamp")).SetExpireAfterSeconds(60 * 60 * 24 * 30)
+	err = client.Database("ww").CreateCollection(context.Background(), "metrics_domain_expiration", opts)
+	if err != nil {
+		cancel()
+		return nil, nil, err
+	}
+
 	return client.Database("ww"), cancel, nil
 }
