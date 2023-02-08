@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/api/handler"
-	"ww-api-gateway/api/middleware"
-	"ww-api-gateway/pkg/auth"
+	"ww-api/api/handler"
+	"ww-api/api/middleware"
+	"ww-api/pkg/auth"
 )
 
 func AuthRouter(r fiber.Router, svc auth.Service, validationKey string) {

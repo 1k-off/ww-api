@@ -3,9 +3,9 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"ww-api-gateway/api/presenter"
-	"ww-api-gateway/pkg/entities"
-	"ww-api-gateway/pkg/user"
+	"ww-api/api/presenter"
+	"ww-api/pkg/entities"
+	"ww-api/pkg/user"
 )
 
 func GetUser(svc user.Service) fiber.Handler {

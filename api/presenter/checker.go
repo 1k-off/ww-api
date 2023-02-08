@@ -2,7 +2,7 @@ package presenter
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/pkg/entities"
+	"ww-api/pkg/entities"
 )
 
 type UptimeSuccessResponse struct {
@@ -21,7 +21,7 @@ type DomainExpirationSuccessResponse struct {
 	URL string `json:"url"`
 }
 
-func CheckerSuccessResponse(name string, targets []*entities.Target) *fiber.Map {
+func CheckerSuccessResponse(name string, targets []*entities.Target) interface{} {
 	switch name {
 	case "uptime":
 		return CheckerUptimeSuccessResponse(targets)
@@ -48,7 +48,7 @@ func CheckerUptimeSuccessResponse(targets []*entities.Target) *fiber.Map {
 		"data":   uptimeTargets,
 	}
 }
-func CheckerSslSuccessResponse(targets []*entities.Target) *fiber.Map {
+func CheckerSslSuccessResponse(targets []*entities.Target) []*SslSuccessResponse {
 	var sslTargets []*SslSuccessResponse
 	for _, target := range targets {
 		sslTargets = append(sslTargets, &SslSuccessResponse{
@@ -56,11 +56,7 @@ func CheckerSslSuccessResponse(targets []*entities.Target) *fiber.Map {
 			URL: target.URL,
 		})
 	}
-	return &fiber.Map{
-		"status": "success",
-		"error":  nil,
-		"data":   sslTargets,
-	}
+	return sslTargets
 }
 func CheckerDomainExpirationSuccessResponse(targets []*entities.Target) *fiber.Map {
 	var domainExpirationTargets []*DomainExpirationSuccessResponse

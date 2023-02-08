@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/api/handler"
-	"ww-api-gateway/api/middleware"
-	"ww-api-gateway/pkg/target"
+	"ww-api/api/handler"
+	"ww-api/api/middleware"
+	"ww-api/pkg/target"
 )
 
 func CheckerRouter(r fiber.Router, svc target.Service, validationKey string) {

@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/api/handler"
-	"ww-api-gateway/api/middleware"
-	"ww-api-gateway/pkg/metrics"
+	"ww-api/api/handler"
+	"ww-api/api/middleware"
+	"ww-api/pkg/metrics"
 )
 
 func MetricsRouter(r fiber.Router, svc metrics.Service, validationKey string) {

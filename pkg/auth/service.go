@@ -3,9 +3,9 @@ package auth
 import (
 	"fmt"
 	"time"
-	"ww-api-gateway/pkg/entities"
-	"ww-api-gateway/pkg/user"
-	"ww-api-gateway/pkg/util"
+	"ww-api/pkg/entities"
+	"ww-api/pkg/user"
+	"ww-api/pkg/util"
 )
 
 type Service interface {

@@ -1,8 +1,8 @@
 package user
 
 import (
-	"ww-api-gateway/pkg/entities"
-	"ww-api-gateway/pkg/util"
+	"ww-api/pkg/entities"
+	"ww-api/pkg/util"
 )
 
 type Service interface {

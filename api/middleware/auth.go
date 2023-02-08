@@ -3,8 +3,8 @@ package middleware
 import (
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v2"
-	"ww-api-gateway/api/presenter"
-	"ww-api-gateway/pkg/util"
+	"ww-api/api/presenter"
+	"ww-api/pkg/util"
 )
 
 func Protected(validationKey string) fiber.Handler {

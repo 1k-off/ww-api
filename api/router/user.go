@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/api/handler"
-	"ww-api-gateway/api/middleware"
-	"ww-api-gateway/pkg/user"
+	"ww-api/api/handler"
+	"ww-api/api/middleware"
+	"ww-api/pkg/user"
 )
 
 func UserRouter(r fiber.Router, svc user.Service, validationKey string) {

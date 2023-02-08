@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	"ww-api-gateway/api"
+	"ww-api/api"
+	"ww-api/pkg/app"
 )
 
 func main() {
@@ -15,9 +16,23 @@ func main() {
 	atExp := 900
 	rtExp := 3600
 
-	apiConfig, err := api.NewConfig(dbConnectionString, port, atPrivkey, atPubkey, rtPrivkey, rtPubkey, atExp, rtExp)
+	mUser := "fd51c04d.4239.41cd.be48.481beeb4ea80"
+	mToken := "memphis"
+	mUrl := "localhost"
+	producerName := "api"
+	snSslData := "ssl-data"
+	snUptimeData := "uptime-data"
+	snDomainExpirationData := "domain-expiration-data"
+
+	appService, err := app.New(dbConnectionString, atPrivkey, atPubkey, rtPrivkey, rtPubkey, atExp, rtExp)
 	if err != nil {
 		panic(err)
 	}
-	log.Fatalln(api.Start(apiConfig))
+
+	manager, err := appService.NewManager(mUser, mToken, mUrl, producerName, snSslData, snUptimeData, snDomainExpirationData)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	go manager.Run()
+	log.Fatalln(api.Start(appService, port))
 }

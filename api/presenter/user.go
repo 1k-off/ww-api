@@ -2,7 +2,7 @@ package presenter
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/pkg/entities"
+	"ww-api/pkg/entities"
 )
 
 type UserResponse struct {

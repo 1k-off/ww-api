@@ -3,8 +3,8 @@ package handler
 import (
 	"errors"
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/api/presenter"
-	"ww-api-gateway/pkg/target"
+	"ww-api/api/presenter"
+	"ww-api/pkg/target"
 )
 
 func GetCheckerTargets(svc target.Service) fiber.Handler {

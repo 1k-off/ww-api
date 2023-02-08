@@ -1,6 +1,6 @@
 package metrics
 
-import "ww-api-gateway/pkg/entities"
+import "ww-api/pkg/entities"
 
 type Service interface {
 	InsertUptime(d []*entities.UptimeData) error

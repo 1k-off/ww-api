@@ -2,9 +2,9 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/api/presenter"
-	"ww-api-gateway/pkg/auth"
-	"ww-api-gateway/pkg/entities"
+	"ww-api/api/presenter"
+	"ww-api/pkg/auth"
+	"ww-api/pkg/entities"
 )
 
 func Login(svc auth.Service) fiber.Handler {

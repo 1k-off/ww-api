@@ -2,9 +2,9 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"ww-api-gateway/api/presenter"
-	"ww-api-gateway/pkg/entities"
-	"ww-api-gateway/pkg/metrics"
+	"ww-api/api/presenter"
+	"ww-api/pkg/entities"
+	"ww-api/pkg/metrics"
 )
 
 func MetricsGetDown(svc metrics.Service) fiber.Handler {
