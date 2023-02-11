@@ -15,7 +15,11 @@ func NewProducer(user, token, memphisUrl, stationName, producerName string) (que
 	if err != nil {
 		return nil, err
 	}
-	client, err := conn.CreateProducer(stationName, producerName)
+	client, err := conn.CreateProducer(
+		stationName,
+		producerName,
+		memphis.ProducerGenUniqueSuffix(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -26,10 +30,18 @@ func NewProducer(user, token, memphisUrl, stationName, producerName string) (que
 }
 
 func (p *producer) Publish(message []byte) error {
-	return p.client.Produce(message)
+	return p.client.Produce(
+		message,
+		memphis.AckWaitSec(15),
+		memphis.AsyncProduce(),
+	)
 }
 
 func (p *producer) Close() error {
+	err := p.client.Destroy()
+	if err != nil {
+		return err
+	}
 	p.connection.Close()
 	return nil
 }

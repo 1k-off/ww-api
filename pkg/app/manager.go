@@ -7,7 +7,6 @@ import (
 	"ww-api/pkg/entities"
 	"ww-api/pkg/queue"
 	"ww-api/pkg/queue/memphis"
-	"ww-api/pkg/util"
 )
 
 type Manager struct {
@@ -21,13 +20,12 @@ type Manager struct {
 }
 
 const (
-	namePrefix = "api-"
-	baseName   = "api"
+	baseName = "api"
 )
 
 func (s *Service) NewManager(mUser, mToken, mUrl, sslTSN, uptimeTSN, domainExpirationTSN, sslMSN, uptimeMSN, domainExpirationMSN string) (*Manager, error) {
-	producerName := namePrefix + util.GetRandomID()
-	consumerName := namePrefix + util.GetRandomID()
+	producerName := baseName
+	consumerName := baseName
 	consumerGroup := baseName
 	sslDataProducer, err := memphis.NewProducer(mUser, mToken, mUrl, sslTSN, producerName)
 	if err != nil {
@@ -220,4 +218,32 @@ func (m *Manager) domainExpirationMetricsConsumerManager(err chan error) {
 			}
 		}
 	}
+}
+
+func (m *Manager) Stop() error {
+	err := m.sslDataProducer.Close()
+	if err != nil {
+		return err
+	}
+	err = m.uptimeDataProducer.Close()
+	if err != nil {
+		return err
+	}
+	err = m.domainExpirationDataProducer.Close()
+	if err != nil {
+		return err
+	}
+	err = m.sslMetricsConsumer.Close()
+	if err != nil {
+		return err
+	}
+	err = m.uptimeMetricsConsumer.Close()
+	if err != nil {
+		return err
+	}
+	err = m.domainExpirationMetricsConsumer.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -17,7 +17,15 @@ func NewConsumer(user, token, memphisUrl, stationName, consumerName, consumerGro
 	if err != nil {
 		return nil, err
 	}
-	client, err := conn.CreateConsumer(stationName, consumerName, memphis.PullInterval(1*time.Second), memphis.ConsumerGroup(consumerGroup))
+	client, err := conn.CreateConsumer(
+		stationName,
+		consumerName,
+		memphis.PullInterval(1*time.Second),
+		memphis.ConsumerGroup(consumerGroup),
+		memphis.BatchSize(30),
+		memphis.MaxAckTime(15*time.Second),
+		memphis.ConsumerGenUniqueSuffix(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +39,9 @@ func NewConsumer(user, token, memphisUrl, stationName, consumerName, consumerGro
 func (c *consumer) Consume(msgChan chan string, err chan error) {
 	handler := func(msgs []*memphis.Msg, e error, ctx context.Context) {
 		if e != nil {
+			if e.Error() == "memphis: timeout" {
+				return
+			}
 			err <- e
 			return
 		}
@@ -48,6 +59,11 @@ func (c *consumer) Consume(msgChan chan string, err chan error) {
 		err <- e
 	}
 }
-func (c *consumer) Close() {
+func (c *consumer) Close() error {
+	err := c.client.Destroy()
+	if err != nil {
+		return err
+	}
 	c.connection.Close()
+	return nil
 }

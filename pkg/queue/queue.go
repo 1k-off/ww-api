@@ -7,5 +7,5 @@ type Producer interface {
 
 type Consumer interface {
 	Consume(msgChan chan string, err chan error)
-	Close()
+	Close() error
 }
