@@ -41,7 +41,7 @@ func (r *repository) Get(id string) (*entities.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := r.Collection.FindOne(context.Background(), bson.M{"_id": uid}).Decode(&user); err != nil {
+	if err := r.Collection.FindOne(context.Background(), bson.M{entities.MongoKeyId: uid}).Decode(&user); err != nil {
 		return nil, err
 	}
 	return user, nil
@@ -49,14 +49,14 @@ func (r *repository) Get(id string) (*entities.User, error) {
 
 func (r *repository) GetByLogin(login string) (*entities.User, error) {
 	var user *entities.User
-	if err := r.Collection.FindOne(context.Background(), bson.M{"login": login}).Decode(&user); err != nil {
+	if err := r.Collection.FindOne(context.Background(), bson.M{entities.MongoKeyLogin: login}).Decode(&user); err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
 func (r *repository) Update(u *entities.User) (*entities.User, error) {
-	_, err := r.Collection.UpdateOne(context.Background(), bson.M{"_id": u.ID}, bson.M{"$set": u})
+	_, err := r.Collection.UpdateOne(context.Background(), bson.M{entities.MongoKeyId: u.ID}, bson.M{"$set": u})
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (r *repository) Delete(id string) error {
 	if err != nil {
 		return err
 	}
-	_, err = r.Collection.DeleteOne(context.Background(), bson.M{"_id": uid})
+	_, err = r.Collection.DeleteOne(context.Background(), bson.M{entities.MongoKeyId: uid})
 	if err != nil {
 		return err
 	}

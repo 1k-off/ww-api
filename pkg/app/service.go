@@ -5,8 +5,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 	"time"
 	"ww-api/pkg/auth"
+	"ww-api/pkg/entities"
 	"ww-api/pkg/metrics"
 	"ww-api/pkg/target"
 	"ww-api/pkg/user"
@@ -26,14 +28,13 @@ type Service struct {
 func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKey string, atExpiresIn, rtExpiresIn int) (*Service, error) {
 	db, cancel, err := databaseConnection(dbConnectionString)
 	if err != nil {
-		cancel()
 		return nil, err
 	}
-	userCollection := db.Collection("users")
+	userCollection := db.Collection(entities.MongoCollectionNameUsers)
 	_, err = userCollection.Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
-			Keys:    bson.D{{Key: "login", Value: 1}},
+			Keys:    bson.D{{Key: entities.MongoKeyLogin, Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	)
@@ -46,11 +47,11 @@ func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKe
 
 	authService := auth.NewService(userService, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKey, atExpiresIn, rtExpiresIn)
 
-	targetCollection := db.Collection("targets")
+	targetCollection := db.Collection(entities.MongoCollectionNameTargets)
 	_, err = targetCollection.Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
-			Keys:    bson.D{{Key: "url", Value: 1}},
+			Keys:    bson.D{{Key: entities.MongoKeyUrl, Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	)
@@ -61,9 +62,9 @@ func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKe
 	targetRepository := target.NewRepository(targetCollection)
 	targetService := target.NewService(targetRepository)
 
-	metricsUptimeCollection := db.Collection("metrics_uptime")
-	metricsSslCollection := db.Collection("metrics_ssl")
-	metricsDomainExpirationCollection := db.Collection("metrics_domain_expiration")
+	metricsUptimeCollection := db.Collection(entities.MongoCollectionNameMetricsUptime)
+	metricsSslCollection := db.Collection(entities.MongoCollectionNameMetricsSsl)
+	metricsDomainExpirationCollection := db.Collection(entities.MongoCollectionNameMetricsDomainExpiration)
 	metricsRepository := metrics.NewRepository(metricsUptimeCollection, metricsSslCollection, metricsDomainExpirationCollection)
 	metricsService := metrics.NewService(metricsRepository)
 
@@ -79,6 +80,10 @@ func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKe
 }
 
 func databaseConnection(connectionString string) (*mongo.Database, context.CancelFunc, error) {
+	cs, err := connstring.ParseAndValidate(connectionString)
+	if err != nil {
+		return nil, nil, err
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString).SetServerSelectionTimeout(time.Second*10))
 	if err != nil {
@@ -90,30 +95,33 @@ func databaseConnection(connectionString string) (*mongo.Database, context.Cance
 		cancel()
 		return nil, nil, err
 	}
-
-	collectionNames, _ := client.Database("ww").ListCollectionNames(ctx, bson.M{})
-	requiredTimeseriesCollections := []string{"metrics_uptime", "metrics_ssl", "metrics_domain_expiration"}
+	collectionNames, _ := client.Database(cs.Database).ListCollectionNames(ctx, bson.M{})
+	requiredTimeseriesCollections := []string{
+		entities.MongoCollectionNameMetricsUptime,
+		entities.MongoCollectionNameMetricsSsl,
+		entities.MongoCollectionNameMetricsDomainExpiration,
+	}
 	for _, requiredCollection := range requiredTimeseriesCollections {
 		if !util.Contains(collectionNames, requiredCollection) {
 			switch requiredCollection {
-			case "metrics_uptime":
+			case entities.MongoCollectionNameMetricsUptime:
 				opts := options.CreateCollection().
 					SetTimeSeriesOptions(options.TimeSeries().
-						SetGranularity("seconds").
-						SetMetaField("metadata").
-						SetTimeField("timestamp")).SetExpireAfterSeconds(60 * 60 * 24 * 30)
-				err = client.Database("ww").CreateCollection(context.Background(), requiredCollection, opts)
+						SetGranularity(entities.MongoTsGranularitySeconds).
+						SetMetaField(entities.MongoKeyMetadata).
+						SetTimeField(entities.MongoKeyTimestamp)).SetExpireAfterSeconds(60 * 60 * 24 * 30)
+				err = client.Database(cs.Database).CreateCollection(context.Background(), requiredCollection, opts)
 				if err != nil {
 					cancel()
 					return nil, nil, err
 				}
-			case "metrics_ssl", "metrics_domain_expiration":
+			case entities.MongoCollectionNameMetricsSsl, entities.MongoCollectionNameMetricsDomainExpiration:
 				opts := options.CreateCollection().
 					SetTimeSeriesOptions(options.TimeSeries().
-						SetGranularity("hours").
-						SetMetaField("metadata").
-						SetTimeField("timestamp")).SetExpireAfterSeconds(60 * 60 * 24 * 30)
-				err = client.Database("ww").CreateCollection(context.Background(), requiredCollection, opts)
+						SetGranularity(entities.MongoTsGranularityHours).
+						SetMetaField(entities.MongoKeyMetadata).
+						SetTimeField(entities.MongoKeyTimestamp)).SetExpireAfterSeconds(60 * 60 * 24 * 30)
+				err = client.Database(cs.Database).CreateCollection(context.Background(), requiredCollection, opts)
 				if err != nil {
 					cancel()
 					return nil, nil, err
@@ -122,7 +130,7 @@ func databaseConnection(connectionString string) (*mongo.Database, context.Cance
 		}
 	}
 
-	return client.Database("ww"), cancel, nil
+	return client.Database(cs.Database), cancel, nil
 }
 
 func (s *Service) Stop() {

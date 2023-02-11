@@ -7,6 +7,12 @@ import (
 	"ww-api/pkg/entities"
 )
 
+const (
+	cookieNameAccessToken   = "access_token"
+	cookieNameRefreshToken  = "refresh_token"
+	headerNameAuthorization = "Authorization"
+)
+
 func Login(svc auth.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		u := new(entities.User)
@@ -18,12 +24,12 @@ func Login(svc auth.Service) fiber.Handler {
 			return c.Status(fiber.StatusInternalServerError).JSON(presenter.AuthErrorResponse(err))
 		}
 		accessTokenCookie := &fiber.Cookie{
-			Name:    "Authorization",
+			Name:    cookieNameAccessToken,
 			Value:   accessToken,
 			Expires: svc.AccessTokenExpiresIn(),
 		}
 		refreshTokenCookie := &fiber.Cookie{
-			Name:    "refresh_token",
+			Name:    cookieNameRefreshToken,
 			Value:   refreshToken,
 			Expires: svc.RefreshTokenExpiresIn(),
 		}
@@ -35,7 +41,7 @@ func Login(svc auth.Service) fiber.Handler {
 
 func Refresh(svc auth.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		refreshToken := c.Get("refresh_token")
+		refreshToken := c.Get(cookieNameRefreshToken)
 		u, accessToken, refreshToken, err := svc.Refresh(refreshToken)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(presenter.AuthErrorResponse(err))
@@ -47,13 +53,13 @@ func Refresh(svc auth.Service) fiber.Handler {
 func Logout(svc auth.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// getting authorization header content and splitting it to get the token
-		authHeader := c.Get("Authorization")
+		authHeader := c.Get(headerNameAuthorization)
 		accessToken := authHeader[7:]
 		err := svc.Logout(accessToken)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(presenter.AuthErrorResponse(err))
 		}
-		c.ClearCookie("Authorization", "refresh_token")
+		c.ClearCookie(cookieNameAccessToken, cookieNameRefreshToken)
 		return c.JSON(presenter.AuthLogoutResponse())
 	}
 }

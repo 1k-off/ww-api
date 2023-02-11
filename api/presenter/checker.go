@@ -23,11 +23,11 @@ type DomainExpirationSuccessResponse struct {
 
 func CheckerSuccessResponse(name string, targets []*entities.Target) interface{} {
 	switch name {
-	case "uptime":
+	case entities.CheckerNameUptime:
 		return CheckerUptimeSuccessResponse(targets)
-	case "ssl":
+	case entities.CheckerNameSsl:
 		return CheckerSslSuccessResponse(targets)
-	case "domainExpiration":
+	case entities.CheckerNameDomainExpiration:
 		return CheckerDomainExpirationSuccessResponse(targets)
 	}
 	return nil

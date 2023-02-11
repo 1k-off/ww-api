@@ -35,7 +35,7 @@ func (r *repository) Get(id string) (*entities.Target, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := r.Collection.FindOne(context.Background(), bson.M{"_id": tid}).Decode(&target); err != nil {
+	if err = r.Collection.FindOne(context.Background(), bson.M{entities.MongoKeyId: tid}).Decode(&target); err != nil {
 		return nil, err
 	}
 	return target, nil
@@ -43,7 +43,7 @@ func (r *repository) Get(id string) (*entities.Target, error) {
 
 func (r *repository) GetByUrl(name string) (*entities.Target, error) {
 	var target *entities.Target
-	if err := r.Collection.FindOne(context.Background(), bson.M{"url": name}).Decode(&target); err != nil {
+	if err := r.Collection.FindOne(context.Background(), bson.M{entities.MongoKeyUrl: name}).Decode(&target); err != nil {
 		return nil, err
 	}
 	return target, nil
@@ -63,7 +63,7 @@ func (r *repository) Delete(id string) error {
 	if err != nil {
 		return err
 	}
-	_, err = r.Collection.DeleteOne(context.Background(), bson.M{"_id": tid})
+	_, err = r.Collection.DeleteOne(context.Background(), bson.M{entities.MongoKeyId: tid})
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (r *repository) Delete(id string) error {
 }
 
 func (r *repository) Update(t *entities.Target) (*entities.Target, error) {
-	_, err := r.Collection.UpdateOne(context.Background(), bson.M{"_id": t.ID}, bson.M{"$set": t})
+	_, err := r.Collection.UpdateOne(context.Background(), bson.M{entities.MongoKeyId: t.ID}, bson.M{"$set": t})
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (r *repository) GetAll() ([]*entities.Target, error) {
 		return nil, err
 	}
 	var targets []*entities.Target
-	if err := result.All(context.Background(), &targets); err != nil {
+	if err = result.All(context.Background(), &targets); err != nil {
 		return nil, err
 	}
 	return targets, nil
@@ -96,12 +96,12 @@ func (r *repository) Count() (int64, error) {
 
 // GetTargetsForChecker returns all targets that are enabled globally and for the given checker
 func (r *repository) GetTargetsForChecker(checker string) ([]*entities.Target, error) {
-	result, err := r.Collection.Find(context.Background(), bson.M{"isActive": true, checker: true})
+	result, err := r.Collection.Find(context.Background(), bson.M{entities.MongoKeyIsActive: true, checker: true})
 	if err != nil {
 		return nil, err
 	}
 	var targets []*entities.Target
-	if err := result.All(context.Background(), &targets); err != nil {
+	if err = result.All(context.Background(), &targets); err != nil {
 		return nil, err
 	}
 	return targets, nil

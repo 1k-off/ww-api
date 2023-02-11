@@ -53,7 +53,7 @@ func MetricsPutUptime(svc metrics.Service) fiber.Handler {
 		if err := c.BodyParser(&m); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(presenter.MetricsErrorResponse(err))
 		}
-		if err := svc.InsertUptime(m); err != nil {
+		if err := svc.InsertUptimeBatch(m); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(presenter.MetricsErrorResponse(err))
 		}
 		return c.JSON(presenter.MetricsPutSuccessResponse())
@@ -66,7 +66,7 @@ func MetricsPutSslExpiration(svc metrics.Service) fiber.Handler {
 		if err := c.BodyParser(&m); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(presenter.MetricsErrorResponse(err))
 		}
-		if err := svc.InsertSsl(m); err != nil {
+		if err := svc.InsertSslBatch(m); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(presenter.MetricsErrorResponse(err))
 		}
 		return c.JSON(presenter.MetricsPutSuccessResponse())
@@ -79,7 +79,7 @@ func MetricsPutDomainExpiration(svc metrics.Service) fiber.Handler {
 		if err := c.BodyParser(&m); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(presenter.MetricsErrorResponse(err))
 		}
-		if err := svc.InsertDomainExpiration(m); err != nil {
+		if err := svc.InsertDomainExpirationBatch(m); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(presenter.MetricsErrorResponse(err))
 		}
 		return c.JSON(presenter.MetricsPutSuccessResponse())

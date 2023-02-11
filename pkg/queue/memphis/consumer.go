@@ -2,7 +2,6 @@ package memphis
 
 import (
 	"context"
-	"fmt"
 	"github.com/memphisdev/memphis.go"
 	"time"
 	"ww-api/pkg/queue"
@@ -32,7 +31,7 @@ func NewConsumer(user, token, memphisUrl, stationName, consumerName, consumerGro
 func (c *consumer) Consume(msgChan chan string, err chan error) {
 	handler := func(msgs []*memphis.Msg, e error, ctx context.Context) {
 		if e != nil {
-			fmt.Printf("Fetch failed: %v", err)
+			err <- e
 			return
 		}
 		for _, msg := range msgs {
@@ -40,6 +39,7 @@ func (c *consumer) Consume(msgChan chan string, err chan error) {
 			e = msg.Ack()
 			if e != nil {
 				err <- e
+				return
 			}
 		}
 	}
