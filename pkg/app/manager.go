@@ -23,6 +23,12 @@ const (
 	baseName = "api"
 )
 
+const (
+	timePeriodSslTargets              = time.Minute * 5
+	timePeriodUptimeTargets           = time.Minute * 1
+	timePeriodDomainExpirationTargets = time.Minute * 1
+)
+
 func (s *Service) NewManager(mUser, mToken, mUrl, sslTSN, uptimeTSN, domainExpirationTSN, sslMSN, uptimeMSN, domainExpirationMSN string) (*Manager, error) {
 	producerName := baseName
 	consumerName := baseName
@@ -87,8 +93,8 @@ func (m *Manager) sslTargetsManager(err chan error) {
 		select {
 		case <-m.svc.ctx.Done():
 			return
-		case <-time.After(time.Minute * 1):
-			targets, e := m.svc.TargetService.GetTargetsForChecker(entities.CheckerNameSsl)
+		case <-time.After(timePeriodSslTargets):
+			targets, e := m.svc.TargetService.GetTargetsForSslChecker()
 			if err != nil {
 				err <- e
 			}
@@ -111,8 +117,8 @@ func (m *Manager) uptimeTargetsManager(err chan error) {
 		select {
 		case <-m.svc.ctx.Done():
 			return
-		case <-time.After(time.Minute * 1):
-			targets, e := m.svc.TargetService.GetTargetsForChecker(entities.CheckerNameUptime)
+		case <-time.After(timePeriodUptimeTargets):
+			targets, e := m.svc.TargetService.GetTargetsForUptimeChecker()
 			if err != nil {
 				err <- e
 			}
@@ -135,8 +141,8 @@ func (m *Manager) domainExpirationTargetsManager(err chan error) {
 		select {
 		case <-m.svc.ctx.Done():
 			return
-		case <-time.After(time.Minute * 1):
-			targets, e := m.svc.TargetService.GetTargetsForChecker(entities.CheckerNameDomainExpiration)
+		case <-time.After(timePeriodDomainExpirationTargets):
+			targets, e := m.svc.TargetService.GetTargetsForDomainExpirationChecker()
 			if err != nil {
 				err <- e
 			}
@@ -221,6 +227,7 @@ func (m *Manager) domainExpirationMetricsConsumerManager(err chan error) {
 }
 
 func (m *Manager) Stop() error {
+	m.svc.ctx.Done()
 	err := m.sslDataProducer.Close()
 	if err != nil {
 		return err

@@ -11,21 +11,27 @@ import (
 func GetCheckerTargets(svc target.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		name := c.Params("name")
-		var checkerName string
 		switch name {
 		case entities.CheckerNameUptime:
-			checkerName = entities.CheckerNameUptime
+			targets, err := svc.GetTargetsForUptimeChecker()
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(presenter.CheckerErrorResponse(name, err))
+			}
+			return c.JSON(presenter.CheckerUptimeSuccessResponse(targets))
 		case entities.CheckerNameSsl:
-			checkerName = entities.CheckerNameSsl
+			targets, err := svc.GetTargetsForSslChecker()
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(presenter.CheckerErrorResponse(name, err))
+			}
+			return c.JSON(presenter.CheckerSslSuccessResponse(targets))
 		case entities.CheckerNameDomainExpiration:
-			checkerName = entities.CheckerNameDomainExpiration
+			targets, err := svc.GetTargetsForDomainExpirationChecker()
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(presenter.CheckerErrorResponse(name, err))
+			}
+			return c.JSON(presenter.CheckerDomainExpirationSuccessResponse(targets))
 		default:
 			return c.Status(fiber.StatusBadRequest).JSON(presenter.CheckerErrorResponse(name, errors.New("invalid checker name")))
 		}
-		t, err := svc.GetTargetsForChecker(checkerName)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(presenter.CheckerErrorResponse(name, err))
-		}
-		return c.JSON(presenter.CheckerSuccessResponse(name, t))
 	}
 }

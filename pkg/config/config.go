@@ -76,6 +76,9 @@ func (c *Config) Validate() error {
 	if err := c.validateDbConfig(); err != nil {
 		return err
 	}
+	if err := c.validateQueueConfig(); err != nil {
+		return err
+	}
 	return nil
 }
 

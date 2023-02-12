@@ -55,3 +55,36 @@ queue:
 | queue.memphis.uptime_metrics_station_name            | The name of the station to use for uptime metrics.                          | No       | uptime-metrics            |
 | queue.memphis.domain_expiration_metrics_station_name | The name of the station to use for domain expiration metrics.               | No       | domain-expiration-metrics |
 
+## Memphis Queue
+
+### Schemas
+
+SSL target schema:
+```json
+{
+  "url": ""
+}
+```
+SSL metric schema:
+```json
+{
+    "metadata": {
+        "url": "",
+        "location": ""
+    },
+    "timestamp": "",
+    "expirationDate": "",
+    "certData": {
+        "host": "",
+        "commonName": "",
+        "alternativeNames": [
+            ""
+        ],
+        "issuer": "",
+        "validFrom": "",
+        "validTo": ""
+    },
+    "error": "",
+    "expiringSoon": false
+}
+```

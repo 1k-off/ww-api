@@ -12,12 +12,8 @@ func MetricsDownSuccessResponse(d []*entities.TargetDown) *fiber.Map {
 		"data":   d,
 	}
 }
-func MetricsSslExpirationSuccessResponse(d []*entities.SslExpiringSoon) *fiber.Map {
-	return &fiber.Map{
-		"status": "success",
-		"error":  nil,
-		"data":   d,
-	}
+func MetricsSslExpirationSuccessResponse(d []*entities.SslExpiringSoon) []*entities.SslExpiringSoon {
+	return d
 }
 func MetricsDomainExpirationSuccessResponse(d []*entities.DomainExpiringSoon) *fiber.Map {
 	return &fiber.Map{

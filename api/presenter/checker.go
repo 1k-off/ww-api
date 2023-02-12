@@ -21,18 +21,6 @@ type DomainExpirationSuccessResponse struct {
 	URL string `json:"url"`
 }
 
-func CheckerSuccessResponse(name string, targets []*entities.Target) interface{} {
-	switch name {
-	case entities.CheckerNameUptime:
-		return CheckerUptimeSuccessResponse(targets)
-	case entities.CheckerNameSsl:
-		return CheckerSslSuccessResponse(targets)
-	case entities.CheckerNameDomainExpiration:
-		return CheckerDomainExpirationSuccessResponse(targets)
-	}
-	return nil
-}
-
 func CheckerUptimeSuccessResponse(targets []*entities.Target) *fiber.Map {
 	var uptimeTargets []*UptimeSuccessResponse
 	for _, target := range targets {
@@ -48,11 +36,10 @@ func CheckerUptimeSuccessResponse(targets []*entities.Target) *fiber.Map {
 		"data":   uptimeTargets,
 	}
 }
-func CheckerSslSuccessResponse(targets []*entities.Target) []*SslSuccessResponse {
+func CheckerSslSuccessResponse(targets []*entities.SslTarget) []*SslSuccessResponse {
 	var sslTargets []*SslSuccessResponse
 	for _, target := range targets {
 		sslTargets = append(sslTargets, &SslSuccessResponse{
-			ID:  target.ID.Hex(),
 			URL: target.URL,
 		})
 	}

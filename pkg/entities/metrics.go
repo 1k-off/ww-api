@@ -47,8 +47,9 @@ type TargetDown struct {
 }
 
 type SslExpiringSoon struct {
-	Url     string    `json:"url" bson:"url"`
-	Expires time.Time `json:"since" bson:"since"`
+	Url     string `json:"url" bson:"url"`
+	Expires string `json:"since" bson:"since"`
+	Error   string `json:"error" bson:"error"`
 }
 
 type DomainExpiringSoon struct {

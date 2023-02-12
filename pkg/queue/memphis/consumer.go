@@ -60,10 +60,13 @@ func (c *consumer) Consume(msgChan chan string, err chan error) {
 	}
 }
 func (c *consumer) Close() error {
-	err := c.client.Destroy()
-	if err != nil {
-		return err
-	}
+	// Not calling Destroy() because it will cause the consumer will receive all acknowledged messages again
+	// https://discord.com/channels/963333392844328961/1074408130345177149
+
+	//err := c.client.Destroy()
+	//if err != nil {
+	//	return err
+	//}
 	c.connection.Close()
 	return nil
 }

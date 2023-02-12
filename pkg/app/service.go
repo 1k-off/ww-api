@@ -65,7 +65,7 @@ func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKe
 	metricsUptimeCollection := db.Collection(entities.MongoCollectionNameMetricsUptime)
 	metricsSslCollection := db.Collection(entities.MongoCollectionNameMetricsSsl)
 	metricsDomainExpirationCollection := db.Collection(entities.MongoCollectionNameMetricsDomainExpiration)
-	metricsRepository := metrics.NewRepository(metricsUptimeCollection, metricsSslCollection, metricsDomainExpirationCollection)
+	metricsRepository := metrics.NewRepository(metricsUptimeCollection, metricsSslCollection, metricsDomainExpirationCollection, targetService)
 	metricsService := metrics.NewService(metricsRepository)
 
 	return &Service{

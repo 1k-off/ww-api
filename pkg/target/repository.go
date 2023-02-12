@@ -17,6 +17,9 @@ type Repository interface {
 	GetAll() ([]*entities.Target, error)
 	Count() (int64, error)
 	GetTargetsForChecker(checker string) ([]*entities.Target, error)
+	GetTargetsForSslChecker() ([]*entities.SslTarget, error)
+	GetTargetsForUptimeChecker() ([]*entities.Target, error)
+	GetTargetsForDomainExpirationChecker() ([]*entities.Target, error)
 }
 
 type repository struct {
@@ -94,9 +97,48 @@ func (r *repository) Count() (int64, error) {
 	return r.Collection.CountDocuments(context.Background(), bson.D{})
 }
 
-// GetTargetsForChecker returns all targets that are enabled globally and for the given checker
+// GetTargetsForChecker returns all targets that are enabled globally and for the given checker with the whole target information
 func (r *repository) GetTargetsForChecker(checker string) ([]*entities.Target, error) {
 	result, err := r.Collection.Find(context.Background(), bson.M{entities.MongoKeyIsActive: true, checker: true})
+	if err != nil {
+		return nil, err
+	}
+	var targets []*entities.Target
+	if err = result.All(context.Background(), &targets); err != nil {
+		return nil, err
+	}
+	return targets, nil
+}
+
+// GetTargetsForSslChecker returns all targets that are enabled globally and for the ssl checker
+func (r *repository) GetTargetsForSslChecker() ([]*entities.SslTarget, error) {
+	result, err := r.Collection.Find(context.Background(), bson.M{entities.MongoKeyIsActive: true, entities.MongoKeySsl: true})
+	if err != nil {
+		return nil, err
+	}
+	var targets []*entities.SslTarget
+	if err = result.All(context.Background(), &targets); err != nil {
+		return nil, err
+	}
+	return targets, nil
+}
+
+// GetTargetsForUptimeChecker returns all targets that are enabled globally and for the ssl checker
+func (r *repository) GetTargetsForUptimeChecker() ([]*entities.Target, error) {
+	result, err := r.Collection.Find(context.Background(), bson.M{entities.MongoKeyIsActive: true, entities.MongoKeySsl: true})
+	if err != nil {
+		return nil, err
+	}
+	var targets []*entities.Target
+	if err = result.All(context.Background(), &targets); err != nil {
+		return nil, err
+	}
+	return targets, nil
+}
+
+// GetTargetsForDomainExpirationChecker returns all targets that are enabled globally and for the ssl checker
+func (r *repository) GetTargetsForDomainExpirationChecker() ([]*entities.Target, error) {
+	result, err := r.Collection.Find(context.Background(), bson.M{entities.MongoKeyIsActive: true, entities.MongoKeySsl: true})
 	if err != nil {
 		return nil, err
 	}

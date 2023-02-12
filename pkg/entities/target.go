@@ -27,3 +27,7 @@ type TargetNotifications struct {
 	Slack      bool     `bson:"slack" json:"slack"`
 	SlackUsers []string `bson:"slackUsers" json:"slackUsers"`
 }
+
+type SslTarget struct {
+	URL string `json:"url,omitempty"`
+}
