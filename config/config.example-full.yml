@@ -1,3 +1,4 @@
+log_level: info
 database:
   provider: mongodb
   connection_string: mongodb://root:password123@localhost:27017/ww?authSource=admin

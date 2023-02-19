@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	LogLevel string   `mapstructure:"log_level"`
 	Database Database `mapstructure:"database"`
 	Server   Server   `mapstructure:"server"`
 	Queue    Queue    `mapstructure:"queue"`

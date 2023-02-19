@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -28,6 +29,7 @@ type Service struct {
 func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKey string, atExpiresIn, rtExpiresIn int) (*Service, error) {
 	db, cancel, err := databaseConnection(dbConnectionString)
 	if err != nil {
+		log.Debug().Err(err).Msg("Failed to connect to database")
 		return nil, err
 	}
 	userCollection := db.Collection(entities.MongoCollectionNameUsers)
@@ -39,6 +41,7 @@ func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKe
 		},
 	)
 	if err != nil {
+		log.Debug().Err(err).Msg("Failed to create index in user collection")
 		cancel()
 		return nil, err
 	}
@@ -56,6 +59,7 @@ func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKe
 		},
 	)
 	if err != nil {
+		log.Debug().Err(err).Msg("Failed to create index in target collection")
 		cancel()
 		return nil, err
 	}
@@ -82,19 +86,23 @@ func New(dbConnectionString, atPrivateKey, atPublicKey, rtPrivateKey, rtPublicKe
 func databaseConnection(connectionString string) (*mongo.Database, context.CancelFunc, error) {
 	cs, err := connstring.ParseAndValidate(connectionString)
 	if err != nil {
+		log.Debug().Err(err).Msg("Failed to parse connection string")
 		return nil, nil, err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString).SetServerSelectionTimeout(time.Second*10))
 	if err != nil {
+		log.Debug().Err(err).Msg("Failed to connect to database")
 		cancel()
 		return nil, nil, err
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
+		log.Debug().Err(err).Msg("Failed to ping database")
 		cancel()
 		return nil, nil, err
 	}
+	log.Debug().Msg("Connected to database")
 	collectionNames, _ := client.Database(cs.Database).ListCollectionNames(ctx, bson.M{})
 	requiredTimeseriesCollections := []string{
 		entities.MongoCollectionNameMetricsUptime,
@@ -112,9 +120,11 @@ func databaseConnection(connectionString string) (*mongo.Database, context.Cance
 						SetTimeField(entities.MongoKeyTimestamp)).SetExpireAfterSeconds(60 * 60 * 24 * 30)
 				err = client.Database(cs.Database).CreateCollection(context.Background(), requiredCollection, opts)
 				if err != nil {
+					log.Debug().Err(err).Msg("Failed to create collection")
 					cancel()
 					return nil, nil, err
 				}
+				log.Info().Msg("Created collection " + requiredCollection)
 			case entities.MongoCollectionNameMetricsSsl, entities.MongoCollectionNameMetricsDomainExpiration:
 				opts := options.CreateCollection().
 					SetTimeSeriesOptions(options.TimeSeries().
@@ -123,13 +133,14 @@ func databaseConnection(connectionString string) (*mongo.Database, context.Cance
 						SetTimeField(entities.MongoKeyTimestamp)).SetExpireAfterSeconds(60 * 60 * 24 * 30)
 				err = client.Database(cs.Database).CreateCollection(context.Background(), requiredCollection, opts)
 				if err != nil {
+					log.Debug().Err(err).Msg("Failed to create collection")
 					cancel()
 					return nil, nil, err
 				}
+				log.Info().Msg("Created collection " + requiredCollection)
 			}
 		}
 	}
-
 	return client.Database(cs.Database), cancel, nil
 }
 

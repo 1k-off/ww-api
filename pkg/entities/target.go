@@ -31,3 +31,12 @@ type TargetNotifications struct {
 type SslTarget struct {
 	URL string `json:"url,omitempty"`
 }
+
+type UptimeTarget struct {
+	URL    string       `json:"url,omitempty"`
+	Config UptimeConfig `json:"config"`
+}
+
+type DomainExpirationTarget struct {
+	URL string `json:"url,omitempty"`
+}

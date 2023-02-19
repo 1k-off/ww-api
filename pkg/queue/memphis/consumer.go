@@ -3,6 +3,7 @@ package memphis
 import (
 	"context"
 	"github.com/memphisdev/memphis.go"
+	"github.com/rs/zerolog/log"
 	"time"
 	"ww-api/pkg/queue"
 )
@@ -42,6 +43,7 @@ func (c *consumer) Consume(msgChan chan string, err chan error) {
 			if e.Error() == "memphis: timeout" {
 				return
 			}
+			log.Debug().Err(e).Msg("memphis consumer error")
 			err <- e
 			return
 		}
@@ -49,6 +51,7 @@ func (c *consumer) Consume(msgChan chan string, err chan error) {
 			msgChan <- string(msg.Data())
 			e = msg.Ack()
 			if e != nil {
+				log.Debug().Err(e).Msg("memphis consumer ack error")
 				err <- e
 				return
 			}
@@ -56,6 +59,7 @@ func (c *consumer) Consume(msgChan chan string, err chan error) {
 	}
 	e := c.client.Consume(handler)
 	if e != nil {
+		log.Debug().Err(e).Msg("memphis consumer consume error")
 		err <- e
 	}
 }
