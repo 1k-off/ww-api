@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"time"
 	"ww-api/pkg/entities"
 	"ww-api/pkg/user"
@@ -41,56 +42,69 @@ func NewService(u user.Service, accessTokenPrivateKey, accessTokenPublicKey, ref
 func (s *service) Login(u *entities.User) (*entities.User, string, string, error) {
 	usr, err := s.u.GetByLogin(u.Login)
 	if err != nil {
+		log.Debug().Err(err).Msgf("user %s not found", u.Login)
 		return nil, "", "", err
 	}
 	err = util.VerifyPassword(usr.PasswordHash, u.Password)
 	if err != nil {
+		log.Debug().Err(err).Msgf("password for user %s is incorrect", u.Login)
 		return nil, "", "", err
 	}
 	accessTokenExpiresIn := time.Duration(s.accessTokenExpiresIn) * time.Second
 	refreshTokenExpiresIn := time.Duration(s.refreshTokenExpiresIn) * time.Second
 	accessToken, err := util.CreateJwtToken(accessTokenExpiresIn, usr.ID, s.accessTokenPrivateKey)
 	if err != nil {
+		log.Debug().Err(err).Msgf("failed to create access token for user %s", u.Login)
 		return nil, "", "", err
 	}
 	refreshToken, err := util.CreateJwtToken(refreshTokenExpiresIn, usr.ID, s.refreshTokenPrivateKey)
 	if err != nil {
+		log.Debug().Err(err).Msgf("failed to create refresh token for user %s", u.Login)
 		return nil, "", "", err
 	}
+	log.Debug().Msgf("user %s logged in", u.Login)
 	return usr, accessToken, refreshToken, nil
 }
 
 func (s *service) Refresh(refreshToken string) (*entities.User, string, string, error) {
 	sub, err := util.ValidateJwtToken(refreshToken, s.refreshTokenPublicKey)
 	if err != nil {
+		log.Debug().Err(err).Msg("refresh token is invalid")
 		return nil, "", "", err
 	}
 	usr, err := s.u.Get(fmt.Sprint(sub))
 	if err != nil {
+		log.Debug().Err(err).Msgf("user %s not found", sub)
 		return nil, "", "", err
 	}
 	accessTokenExpiresIn := time.Duration(s.accessTokenExpiresIn) * time.Second
 	refreshTokenExpiresIn := time.Duration(s.refreshTokenExpiresIn) * time.Second
 	accessToken, err := util.CreateJwtToken(accessTokenExpiresIn, usr.ID, s.accessTokenPrivateKey)
 	if err != nil {
+		log.Debug().Err(err).Msgf("failed to create access token for user %s", usr.Login)
 		return nil, "", "", err
 	}
 	refreshToken, err = util.CreateJwtToken(refreshTokenExpiresIn, usr.ID, s.refreshTokenPrivateKey)
 	if err != nil {
+		log.Debug().Err(err).Msgf("failed to create refresh token for user %s", usr.Login)
 		return nil, "", "", err
 	}
+	log.Debug().Msgf("user %s refreshed tokens", usr.Login)
 	return usr, accessToken, refreshToken, nil
 }
 
 func (s *service) Logout(accessToken string) error {
 	sub, err := util.ValidateJwtToken(accessToken, s.accessTokenPublicKey)
 	if err != nil {
+		log.Debug().Err(err).Msg("access token is invalid")
 		return err
 	}
 	_, err = s.u.Get(fmt.Sprint(sub))
 	if err != nil {
+		log.Debug().Err(err).Msgf("user %s not found", sub)
 		return err
 	}
+	log.Debug().Msgf("user %s logged out", sub)
 	return nil
 }
 

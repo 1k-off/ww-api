@@ -5,59 +5,15 @@ import (
 	"ww-api/pkg/entities"
 )
 
-type UptimeSuccessResponse struct {
-	ID     string                 `json:"id"`
-	URL    string                 `json:"url"`
-	Config *entities.UptimeConfig `json:"config"`
+func CheckerUptimeSuccessResponse(targets []*entities.UptimeTarget) []*entities.UptimeTarget {
+	return targets
 }
 
-type SslSuccessResponse struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+func CheckerSslSuccessResponse(targets []*entities.SslTarget) []*entities.SslTarget {
+	return targets
 }
-
-type DomainExpirationSuccessResponse struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
-}
-
-func CheckerUptimeSuccessResponse(targets []*entities.Target) *fiber.Map {
-	var uptimeTargets []*UptimeSuccessResponse
-	for _, target := range targets {
-		uptimeTargets = append(uptimeTargets, &UptimeSuccessResponse{
-			ID:     target.ID.Hex(),
-			URL:    target.URL,
-			Config: &target.Config.Uptime,
-		})
-	}
-	return &fiber.Map{
-		"status": "success",
-		"error":  nil,
-		"data":   uptimeTargets,
-	}
-}
-func CheckerSslSuccessResponse(targets []*entities.SslTarget) []*SslSuccessResponse {
-	var sslTargets []*SslSuccessResponse
-	for _, target := range targets {
-		sslTargets = append(sslTargets, &SslSuccessResponse{
-			URL: target.URL,
-		})
-	}
-	return sslTargets
-}
-func CheckerDomainExpirationSuccessResponse(targets []*entities.Target) *fiber.Map {
-	var domainExpirationTargets []*DomainExpirationSuccessResponse
-	for _, target := range targets {
-		domainExpirationTargets = append(domainExpirationTargets, &DomainExpirationSuccessResponse{
-			ID:  target.ID.Hex(),
-			URL: target.URL,
-		})
-	}
-	return &fiber.Map{
-		"status": "success",
-		"error":  nil,
-		"data":   domainExpirationTargets,
-	}
+func CheckerDomainExpirationSuccessResponse(targets []*entities.DomainExpirationTarget) []*entities.DomainExpirationTarget {
+	return targets
 }
 
 func CheckerErrorResponse(name string, err error) *fiber.Map {

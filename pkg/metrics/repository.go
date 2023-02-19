@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"strings"
@@ -44,35 +45,62 @@ func NewRepository(u *mongo.Collection, s *mongo.Collection, de *mongo.Collectio
 
 func (r *repository) InsertUptime(d interface{}) error {
 	_, err := r.uptimeCollection.InsertOne(context.Background(), d)
+	if err != nil {
+		log.Debug().Err(err).Msgf("error inserting uptime metrics: %v", d)
+	}
 	return err
 }
 func (r *repository) InsertUptimeBatch(d []interface{}) error {
 	_, err := r.uptimeCollection.InsertMany(context.Background(), d)
+	if err != nil {
+		log.Debug().Err(err).Msgf("error batch inserting uptime metrics")
+	}
 	return err
 }
 
 func (r *repository) InsertSsl(d interface{}) error {
 	_, err := r.sslCollection.InsertOne(context.Background(), d)
+	if err != nil {
+		log.Debug().Err(err).Msgf("error inserting ssl metrics: %v", d)
+	}
 	return err
 }
 func (r *repository) InsertSslBatch(d []interface{}) error {
 	_, err := r.sslCollection.InsertMany(context.Background(), d)
+	if err != nil {
+		log.Debug().Err(err).Msgf("error batch inserting ssl metrics")
+	}
 	return err
 }
 
 func (r *repository) InsertDomainExpiration(d interface{}) error {
 	_, err := r.domainExpirationCollection.InsertOne(context.Background(), d)
+	if err != nil {
+		log.Debug().Err(err).Msgf("error inserting domain expiration metrics: %v", d)
+	}
 	return err
 }
 func (r *repository) InsertDomainExpirationBatch(d []interface{}) error {
 	_, err := r.domainExpirationCollection.InsertMany(context.Background(), d)
+	if err != nil {
+		log.Debug().Err(err).Msgf("error batch inserting domain expiration metrics")
+	}
 	return err
 }
 
 func (r *repository) Delete(url string) {
-	_, _ = r.uptimeCollection.DeleteMany(context.Background(), bson.M{entities.MongoKeyMetricMetadataUrl: url})
-	_, _ = r.sslCollection.DeleteMany(context.Background(), bson.M{entities.MongoKeyMetricMetadataUrl: url})
-	_, _ = r.domainExpirationCollection.DeleteMany(context.Background(), bson.M{entities.MongoKeyMetricMetadataUrl: url})
+	_, err := r.uptimeCollection.DeleteMany(context.Background(), bson.M{entities.MongoKeyMetricMetadataUrl: url})
+	if err != nil {
+		log.Err(err).Msgf("error deleting uptime metrics for url: %s", url)
+	}
+	_, err = r.sslCollection.DeleteMany(context.Background(), bson.M{entities.MongoKeyMetricMetadataUrl: url})
+	if err != nil {
+		log.Err(err).Msgf("error deleting ssl metrics for url: %s", url)
+	}
+	_, err = r.domainExpirationCollection.DeleteMany(context.Background(), bson.M{entities.MongoKeyMetricMetadataUrl: url})
+	if err != nil {
+		log.Err(err).Msgf("error deleting domain expiration metrics` for url: %s", url)
+	}
 }
 
 func (r *repository) GetDownTargets() ([]*entities.TargetDown, error) {
@@ -83,9 +111,10 @@ func (r *repository) GetDownTargets() ([]*entities.TargetDown, error) {
 func (r *repository) GetSslExpiringSoon() ([]*entities.SslExpiringSoon, error) {
 	targets, err := r.targetService.GetAll()
 	if err != nil {
+		log.Debug().Err(err).Msg("error getting targets for ssl checker")
 		return nil, err
 	}
-	expTargets, _ := r.getSslExpiringSoon(targets)
+	expTargets := r.getSslExpiringSoon(targets)
 	return expTargets, nil
 }
 
@@ -97,7 +126,7 @@ func (r *repository) GetStats() (*entities.MetricsStats, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (r *repository) getSslExpiringSoon(targets []*entities.Target) ([]*entities.SslExpiringSoon, error) {
+func (r *repository) getSslExpiringSoon(targets []*entities.Target) []*entities.SslExpiringSoon {
 	var (
 		expTargets []*entities.SslExpiringSoon
 		wg         sync.WaitGroup
@@ -121,7 +150,7 @@ func (r *repository) getSslExpiringSoon(targets []*entities.Target) ([]*entities
 		}(t)
 	}
 	wg.Wait()
-	return expTargets, nil
+	return expTargets
 }
 
 func (r *repository) targetIsSslExpirationSoonOrHasError(target *entities.Target) (bool, string, error) {
@@ -132,10 +161,12 @@ func (r *repository) targetIsSslExpirationSoonOrHasError(target *entities.Target
 	}
 	cur, err := r.sslCollection.Aggregate(context.Background(), pipeline)
 	if err != nil {
+		log.Debug().Err(err).Msgf("error getting ssl metrics for target %s", target.URL)
 		return false, "", err
 	}
 	var results []*entities.SslData
 	if err = cur.All(context.Background(), &results); err != nil {
+		log.Debug().Err(err).Msgf("error getting ssl metrics for target %s", target.URL)
 		return false, "", err
 	}
 	if len(results) > 1 {
@@ -145,9 +176,11 @@ func (r *repository) targetIsSslExpirationSoonOrHasError(target *entities.Target
 		return false, "", fmt.Errorf("no results for target %s", target.URL)
 	}
 	if results[0].ExpiringSoon {
+		log.Debug().Msgf("target %s will ssl expire soon", target.URL)
 		return true, results[0].ExpirationDate, nil
 	}
 	if results[0].Error != "" {
+		log.Debug().Msgf("target %s has ssl error: %s", target.URL, results[0].Error)
 		return true, "", fmt.Errorf(results[0].Error)
 	}
 	return false, "", nil

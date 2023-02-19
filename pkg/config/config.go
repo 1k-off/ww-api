@@ -27,6 +27,7 @@ const (
 
 func newDefaultConfig() *Config {
 	return &Config{
+		LogLevel: "info",
 		Database: Database{
 			Provider: DbProviderMongodb,
 		},
@@ -69,6 +70,7 @@ func Load(path string) (*Config, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
+	setupLogger(cfg.LogLevel)
 	return cfg, nil
 }
 
@@ -77,6 +79,10 @@ func (c *Config) Validate() error {
 		return err
 	}
 	if err := c.validateQueueConfig(); err != nil {
+		return err
+	}
+	err := validateLogLevel(c.LogLevel)
+	if err != nil {
 		return err
 	}
 	return nil

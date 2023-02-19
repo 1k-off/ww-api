@@ -14,8 +14,8 @@ type Service interface {
 	Count() (int64, error)
 	GetTargetsForChecker(checker string) ([]*entities.Target, error)
 	GetTargetsForSslChecker() ([]*entities.SslTarget, error)
-	GetTargetsForUptimeChecker() ([]*entities.Target, error)
-	GetTargetsForDomainExpirationChecker() ([]*entities.Target, error)
+	GetTargetsForUptimeChecker() ([]*entities.UptimeTarget, error)
+	GetTargetsForDomainExpirationChecker() ([]*entities.DomainExpirationTarget, error)
 }
 
 type service struct {
@@ -68,10 +68,10 @@ func (s *service) GetTargetsForSslChecker() ([]*entities.SslTarget, error) {
 	return s.repository.GetTargetsForSslChecker()
 }
 
-func (s *service) GetTargetsForUptimeChecker() ([]*entities.Target, error) {
+func (s *service) GetTargetsForUptimeChecker() ([]*entities.UptimeTarget, error) {
 	return s.repository.GetTargetsForUptimeChecker()
 }
 
-func (s *service) GetTargetsForDomainExpirationChecker() ([]*entities.Target, error) {
+func (s *service) GetTargetsForDomainExpirationChecker() ([]*entities.DomainExpirationTarget, error) {
 	return s.repository.GetTargetsForDomainExpirationChecker()
 }
