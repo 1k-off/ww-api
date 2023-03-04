@@ -1,0 +1,49 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY_URL: cloud.canister.io:5000
+  REGISTRY_USERNAME: kosar
+  SERVICE_NAME: webwatch-server
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version-semver: ${{ steps.version.outputs.tag }}
+      version-sha: ${{ steps.set-output.outputs.version-sha }}
+      image-semver: ${{ steps.set-output.outputs.image-semver }}
+      image-sha: ${{ steps.set-output.outputs.image-sha }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login to docker registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY_URL }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - uses: 1k-off/action-semver-tag-release@1.0.3
+        id: version
+        with:
+          version: latest
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push docker containers
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: deployment/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_USERNAME }}/${{ env.SERVICE_NAME }}:${{ steps.version.outputs.tag }}
+            ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_USERNAME }}/${{ env.SERVICE_NAME }}:latest
+      - name: Set outputs
+        id: set-output
+        run: |
+          echo "version-sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "image-semver=${{ env.REGISTRY_USERNAME }}/${{ env.SERVICE_NAME }}:${{ steps.version.outputs.tag }}" >> $GITHUB_OUTPUT
+          echo "image-sha=${{ env.REGISTRY_USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT

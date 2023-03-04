@@ -24,8 +24,8 @@ func Login(svc auth.Service) fiber.Handler {
 		}
 		u, accessToken, refreshToken, err := svc.Login(u)
 		if err != nil {
-			log.Err(err).Msgf("failed to login user %s", u.Login)
-			return c.Status(fiber.StatusInternalServerError).JSON(presenter.AuthErrorResponse(err))
+			//log.Err(err).Msgf("failed to login user %s", u.Login)
+			return c.Status(fiber.StatusUnauthorized).JSON(presenter.AuthErrorResponse(err))
 		}
 		accessTokenCookie := &fiber.Cookie{
 			Name:    cookieNameAccessToken,
