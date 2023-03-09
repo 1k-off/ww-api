@@ -15,6 +15,8 @@ type Service interface {
 	Logout(accessToken string) error
 	AccessTokenExpiresIn() time.Time
 	RefreshTokenExpiresIn() time.Time
+	CheckAccessToken(accessToken string) (bool, error)
+	GetCurrentUser(accessToken string) (*entities.User, error)
 }
 
 type service struct {
@@ -114,4 +116,38 @@ func (s *service) AccessTokenExpiresIn() time.Time {
 
 func (s *service) RefreshTokenExpiresIn() time.Time {
 	return time.Now().Add(time.Duration(s.accessTokenExpiresIn) * time.Second)
+}
+
+// CheckAccessToken Checks validity of access token
+func (s *service) CheckAccessToken(accessToken string) (bool, error) {
+	_, err := util.ValidateJwtToken(accessToken, s.accessTokenPublicKey)
+	if err != nil {
+		log.Debug().Err(err).Msg("access token is invalid")
+		return false, err
+	}
+	return true, nil
+}
+
+// CheckRefreshToken Checks validity of refresh token
+func (s *service) CheckRefreshToken(refreshToken string) (bool, error) {
+	_, err := util.ValidateJwtToken(refreshToken, s.refreshTokenPublicKey)
+	if err != nil {
+		log.Debug().Err(err).Msg("refresh token is invalid")
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *service) GetCurrentUser(accessToken string) (*entities.User, error) {
+	sub, err := util.ValidateJwtToken(accessToken, s.accessTokenPublicKey)
+	if err != nil {
+		log.Debug().Err(err).Msg("access token is invalid")
+		return nil, err
+	}
+	usr, err := s.u.Get(fmt.Sprint(sub))
+	if err != nil {
+		log.Debug().Err(err).Msgf("user %s not found", sub)
+		return nil, err
+	}
+	return s.u.GetByLogin(usr.Login)
 }

@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"syscall"
 	"time"
-	"ww-api/api"
 	"ww-api/pkg/app"
 	"ww-api/pkg/config"
 )
@@ -78,7 +77,7 @@ func main() {
 		}
 	}()
 
-	err = api.Start(appService, cfg.Server.Port)
+	err = app.StartServer(appService, cfg.Server.Port)
 	if err != nil {
 		log.Fatal().Err(err).Msg("api start error")
 	}

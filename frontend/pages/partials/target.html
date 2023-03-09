@@ -1,0 +1,61 @@
+<tr>
+    <form method="post" action="/targets">
+        <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left flex items-center">
+            <span class="ml-3 font-bold text-blueGray-600">
+            {{.URL}}
+            </span>
+            <input type="hidden" name="url" value="{{.URL}}">
+        </td>
+        <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+            <label class="switch">
+                <input type="checkbox" name="is-active" class="target-switch" onclick="clickFn()" {{if .IsActive}}checked{{end}}>
+                <span class="slider round"></span>
+            </label>
+        </td>
+        <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+            <label class="switch">
+                <input type="checkbox" name="uptime" class="target-switch" onclick="clickFn()" {{ if .Uptime }}checked{{ end }}>
+                <span class="slider round"></span>
+            </label>
+        </td>
+        <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+            <label class="switch">
+                <input type="checkbox" name="ssl" class="target-switch" onclick="clickFn()" {{ if .SSL }}checked{{ end }}>
+                <span class="slider round"></span>
+            </label>
+        </td>
+        <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
+            <label class="switch">
+                <input type="checkbox" name="domain-expiration" class="target-switch" onclick="clickFn()" {{ if .DomainExpiration }}checked{{ end }}>
+                <span class="slider round"></span>
+            </label>
+        </td>
+        <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-right">
+            <a
+                    href="#pablo"
+                    class="text-blueGray-500 block py-1 px-3"
+                    onclick="openDropdown(event,'table-light-1-dropdown')"
+            >
+                <i class="fas fa-ellipsis-v"></i>
+            </a>
+            <div
+                    class="hidden bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg min-w-48"
+                    id="table-light-1-dropdown"
+            >
+                <a
+                        href="#pablo"
+                        class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
+                >Update</a
+                >
+                <div
+                        class="h-0 my-2 border border-solid border-blueGray-100"
+                ></div>
+                <a
+                        href="#pablo"
+                        class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
+                >Delete</a
+                >
+            </div>
+        </td>
+    </form>
+</tr>
